@@ -1,0 +1,24 @@
+
+
+# Remove a file from tracked list:
+#  git rm --cached FILENAME
+
+
+**/__pycache__
+
+
+#  Webots  specific files
+
+supervisor.py
+**/supervisor.py
+*.html
+*.js
+*.wbt
+*.wbtworld
+*.wbproj
+*.jpg
+
+# Ignore MacOS files
+.DS_Store
+
+

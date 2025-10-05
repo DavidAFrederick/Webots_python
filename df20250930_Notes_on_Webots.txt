@@ -1,0 +1,292 @@
+
+
+
+
+/Users/dfred/Documents/square_path/controllers/square_path/square_path.py
+
+/Applications/Webots.app/Contents/projects/samples/robotbenchmark/square_path/controllers/square_path/square_path.py
+
+/Volumes/Webots/Webots.app/Contents/projects/samples/robotbenchmark/square_path/controllers/square_path/square_path.py
+
+
+=========
+
+cat square_path.py 
+"""Sample Webots controller for the square path benchmark."""
+
+from controller import Robot
+
+# Get pointer to the robot.
+robot = Robot()
+
+# Get pointer to each wheel of our robot.
+leftWheel = robot.getDevice('left wheel')
+rightWheel = robot.getDevice('right wheel')
+
+# Repeat the following 4 times (once for each side).
+for i in range(0, 4):
+    # First set both wheels to go forward, so the robot goes straight.
+    leftWheel.setPosition(1000)
+    rightWheel.setPosition(1000)
+    # Wait for the robot to reach a corner.
+    robot.step(3900)
+    # Then, set the right wheel backward, so the robot will turn right.
+    leftWheel.setPosition(1000)
+    rightWheel.setPosition(-1000)
+    # Wait until the robot has turned 90 degrees clockwise.
+    robot.step(480)
+
+# Stop the robot when path is completed, as the robot performance
+# is only computed when the robot has stopped.
+leftWheel.setVelocity(0)
+rightWheel.setVelocity(0)
+dfred@MacBook square_path % 
+
+=======================================
+
+from controller import Robot
+
+print("HELLO")
+
+class MyRobotController:
+    def __init__(self):
+        self.robot = Robot()
+        print ("Initializing robot")
+        self.timestep = int(self.robot.getBasicTimeStep())
+
+        # Get and initialize devices
+        self.left_motor = self.robot.getDevice("left wheel")
+        self.right_motor = self.robot.getDevice("right wheel")
+        self.left_motor.setPosition(float('inf'))
+        self.right_motor.setPosition(float('inf'))
+        self.left_motor.setVelocity(0.0)
+        self.right_motor.setVelocity(0.0)
+
+        # self.distance_sensor = self.robot.getDevice("distance sensor")
+        # self.distance_sensor.enable(self.timestep)
+        
+        self.rightWheelSensor = robot.getPositionSensor('right wheel sensor')
+        self.rightWheelSensor.enable(16) # Refreshes the sensor every 16ms.
+
+    def run(self):
+        while self.robot.step(self.timestep) != -1:
+            # Read sensor data
+            sensor_value = self.rightWheelSensor.getValue()
+            print ("Value")
+
+            # Implement basic obstacle avoidance logic
+            if sensor_value < 0.5:  # If obstacle is close
+                # Turn right
+                self.left_motor.setVelocity(2.0)
+                self.right_motor.setVelocity(-2.0)
+            else:
+                # Move forward
+                self.left_motor.setVelocity(5.0)
+                self.right_motor.setVelocity(5.0)
+
+print ("2")
+if __name__ == "__main__":
+    print ("1")
+    controller = MyRobotController()
+    controller.run()
+    
+    
+    
+=======================================
+
+OLD (2021) WORKING Obstical avoidance
+
+# Code for Obstacle Avoidance robot
+
+from controller import Robot
+# Get reference to the robot.
+robot = Robot()
+# Get simulation step length.
+timestep = int(robot.getBasicTimeStep())
+
+# Constants of the Thymio II motors and distance sensors.
+maxMotorVelocity = 9.53
+
+# Get left and right wheel motors.
+leftWheel = robot.getMotor("motor.left")
+rightWheel = robot.getMotor("motor.right")
+leftWheel.setPosition(float('inf'))
+rightWheel.setPosition(float('inf'))
+
+# Get frontal distance sensors.
+outerLeftSensor = robot.getDistanceSensor("prox.horizontal.0")
+centralLeftSensor = robot.getDistanceSensor("prox.horizontal.1")
+centralSensor = robot.getDistanceSensor("prox.horizontal.2")
+centralRightSensor = robot.getDistanceSensor("prox.horizontal.3")
+outerRightSensor = robot.getDistanceSensor("prox.horizontal.4")
+
+# Enable distance sensors.
+outerLeftSensor.enable(timestep)
+centralLeftSensor.enable(timestep)
+centralSensor.enable(timestep)
+centralRightSensor.enable(timestep)
+outerRightSensor.enable(timestep)
+
+robot.step(timestep)
+
+#===( functions )===============================================================================
+
+def delay_seconds(pause_seconds):
+    print ("Delay for %3f seconds" % (pause_seconds))
+    count = int(pause_seconds/0.016)
+    for counter in range(count):
+        robot.step(timestep)
+
+def drive_forward_at_speed(drive_speed):
+    leftWheel.setVelocity(drive_speed)                  # set the wheel speed to start moving the robot
+    rightWheel.setVelocity(drive_speed)
+    print ("Moving Robot Forward at: %3.1f " % (drive_speed))
+
+def stop_robot():
+    print ("Stopping the robot")
+    leftWheel.setVelocity(0)                # Stop the robot by setting wheel velocity
+    rightWheel.setVelocity(0)
+
+def turn_right_90():
+    print ("Turning the robot right")
+    drive_speed = 3.0
+    leftWheel.setVelocity  ( drive_speed)   # set the wheel speed in opposite directions
+    rightWheel.setVelocity (-drive_speed)
+    delay_seconds(1.5)
+    stop_robot()
+
+
+def object_present_size():    # not sure what this number means but it get larger as the robot gets close
+    outerLeftSensor_value = outerLeftSensor.getValue() / 360
+    centralLeftSensor_value = centralLeftSensor.getValue() / 360
+    centralSensor_value = centralSensor.getValue() / 360
+    centralRightSensor_value = centralRightSensor.getValue() / 360
+    outerRightSensor_value = outerRightSensor.getValue() / 360
+
+    combined_value = outerLeftSensor_value + centralLeftSensor_value + centralSensor_value + centralRightSensor_value + outerRightSensor_value
+
+    print ("combined_value", combined_value)
+    return combined_value
+
+#===( main )===============================================================================
+
+drive_velocity = 5
+drive_forward_at_speed(drive_velocity)
+
+object_distance = 2
+while object_present_size() < object_distance:
+    robot.step(timestep)    
+
+stop_robot()
+delay_seconds(1.0)
+
+turn_right_90()
+
+drive_forward_at_speed(drive_velocity)
+delay_seconds(3)
+stop_robot()
+
+turn_right_90()
+turn_right_90()
+turn_right_90()
+
+drive_forward_at_speed(drive_velocity)
+delay_seconds(3)
+stop_robot()
+
+
+print ("Done")
+
+
+#========================================================================================
+
+Squarebot - 
+
+from controller import Robot                        # Add the Robot functionality to python
+
+robot = Robot()                                     # Create the Robot Object.
+timestep = int(robot.getBasicTimeStep())            # Get the default timestep (timestep = 16)
+ 
+leftWheel = robot.getMotor('left wheel')            # Get the wheel motors for the robot
+rightWheel = robot.getMotor('right wheel')
+leftWheel.setPosition(float('inf'))                 # Wheels can be controlled with position or velocity
+rightWheel.setPosition(float('inf'))                # We will use velocity so set position to stop to 'infinity'
+
+front_sensor = robot.getDistanceSensor("so3")        # Get and enable the distance sensors.
+front_sensor.enable(timestep)
+robot.step(timestep)                                # run the clock to get a value on the sensor
+
+
+#===( functions )===============================================================================
+
+def delay_seconds(pause_seconds):
+    print ("Delay for %3f seconds" % (pause_seconds))
+    count = int(pause_seconds/0.016)
+    for counter in range(count):
+        robot.step(timestep)
+
+def drive_forward_at_speed(drive_speed):
+    leftWheel.setVelocity(drive_speed)                  # set the wheel speed to start moving the robot
+    rightWheel.setVelocity(drive_speed)
+    print ("Moving Robot Forward at: %3.1f " % (drive_speed))
+
+def stop_robot():
+    print ("Stopping the robot")
+    leftWheel.setVelocity(0)                # Stop the robot by setting wheel velocity
+    rightWheel.setVelocity(0)
+
+def turn_right_90():
+    print ("Turning the robot right")
+    drive_speed = 3.0
+    leftWheel.setVelocity  ( drive_speed)   # set the wheel speed in opposite directions
+    rightWheel.setVelocity (-drive_speed)
+    delay_seconds(0.85)
+    stop_robot()
+
+def getDistance_in_meters():  
+    range_to_target =  ((1000 - front_sensor.getValue()) / 1000) * 5
+    # print ("Range to target in meters: %3.1f" % (range_to_target) )
+    return range_to_target
+
+
+#===( main )===============================================================================
+
+drive_velocity = 5.24
+
+print ("Driving down side A")
+drive_forward_at_speed(drive_velocity)
+distance_to_wall = 1.2
+while getDistance_in_meters() > distance_to_wall:
+    robot.step(timestep)    
+stop_robot()
+
+delay_seconds(1.0)
+
+turn_right_90()
+turn_right_90()
+turn_right_90()
+turn_right_90()
+
+print ("Driving back down side A")
+drive_forward_at_speed(drive_velocity)
+distance_to_wall = 1.2
+while getDistance_in_meters() > distance_to_wall:
+    robot.step(timestep)    
+stop_robot()
+
+delay_seconds(1.0)
+
+turn_right_90()
+turn_right_90()
+
+print ("Done")
+
+
+#========================================================================================
+
+
+
+
+
+
+
