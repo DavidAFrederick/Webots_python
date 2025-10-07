@@ -40,6 +40,9 @@ class SquarePathRobot(Robot):
         # # Internal state for tracking progress
         self.corner = 0
 
+    def move_robot_simulated_time_forward(self):
+        # print (f" self.timeStep = {self.timeStep}")
+        self.robot.step(self.timeStep)
         
     def move_forward(self, speed):
         self.left_motor.setVelocity(speed)
@@ -50,8 +53,6 @@ class SquarePathRobot(Robot):
         self.right_motor.setVelocity(-speed)
 
     #===( functions )===============================================================================
-    def move_robot_simulated_time_forward(self):
-        self.robot.step(self.timeStep)
 
     def delay_seconds(self, pause_seconds):
         print ("Delay for %3f seconds" % (pause_seconds))
@@ -114,8 +115,9 @@ class SquarePathRobot(Robot):
 # from SquarePathRobot import SquarePathRobot
 
 def main():
-    code = 2
-    if (code == 1):
+    print ("Before Main 2 ============= ")
+
+    if (False):
         print ("===(Main - Original from LLM)=============================================")
         """
         Creates and runs an instance of the SquarePathRobot.
@@ -127,7 +129,7 @@ def main():
         robot_controller.run(speed)
         print ("==========================================================================")
 
-    if (code == 2):
+    if (True):
 
         print ("===(Main - Old)===========================================================")
         robot_one = SquarePathRobot()
@@ -135,9 +137,14 @@ def main():
 
         print ("Driving down side A")
         robot_one.drive_forward_at_speed(drive_velocity)
-        distance_to_wall = 1.2
+        distance_to_wall = 1.3
+        print (f"robot_one.getDistance_in_meters() {robot_one.getDistance_in_meters():5.1f}")
+        robot_one.move_robot_simulated_time_forward()            
+
         while robot_one.getDistance_in_meters() > distance_to_wall:
-            robot_one.move_robot_simulated_time_forward    
+            robot_one.move_robot_simulated_time_forward()    
+            print (f"robot_one.getDistance_in_meters() {robot_one.getDistance_in_meters():5.1f} ")
+
         robot_one.stop_robot()
 
         robot_one.delay_seconds(1.0)
@@ -161,8 +168,15 @@ def main():
 
         print ("Done")
 
-        print ("==========================================================================")
+    #     print ("==========================================================================")
+    print ("Before Main 4 ============= ")
 
+def main2():
+    print ("Main2 ============= ")
+
+
+print ("Before Main 0 ============= ")
 
 if __name__ == "__main__":
+    print ("Before Main 1 ============= ")
     main()
