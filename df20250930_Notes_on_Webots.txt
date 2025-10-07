@@ -1,5 +1,12 @@
+=================
+Understanding file structure:
+
+Obstacle avoidance is working
+Square Path not working
+Wall Following is working
 
 
+=================
 
 
 /Users/dfred/Documents/square_path/controllers/square_path/square_path.py
