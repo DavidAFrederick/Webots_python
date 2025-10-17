@@ -7,8 +7,6 @@ from controller import Robot, Motor, PositionSensor
 
 #===============================================================================================
 
-
-
 #===============================================================================================
 class ThymioRobot(Robot):
 
@@ -133,7 +131,7 @@ class ThymioRobot(Robot):
         self.leftMotor.setPosition(distance)         # Set the "Stop Position" to infinity
         self.rightMotor.setPosition(distance)
         
-        # print(f"Position:  {self.leftMotor.getPosition()}")
+        print(f"Position:  {self.leftMotor.getPosition()}")
 
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     def stop_and_pause_for_x_seconds(self, time_seconds):
