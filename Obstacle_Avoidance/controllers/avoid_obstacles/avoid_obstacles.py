@@ -103,7 +103,6 @@ class ThymioRobot(Robot):
 
     def move_forward_at_percent_speed_x_for_y_seconds(self, percent_speed : float, time_seconds : float) -> None:
         print(f"Moving forward at {percent_speed:4.1f} percent for {time_seconds:4.1f} seconds.  Current time {self.robot.getTime():5.1f}")
-        self.set_RGB_LED_1()
         self.set_both_wheel_speeds(percent_speed)
         start_time = self.robot.getTime()
         time_in_loop = 0
@@ -118,8 +117,12 @@ class ThymioRobot(Robot):
         print (f"Stopping movement at: {current_time:5.1f}")
 
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    def turn_robot_speeds_time(self, percent_velocity : float, turn_duration : float) -> None:
-        self.set_RGB_LED_1()
+    def turn_robot_speed_time(self, percent_velocity : float, turn_duration : float) -> None:
+        #  Since the robot does not have a compass or gyro, the turn is performed without feedback  of the heading change
+        #  The turn is simply performed with motor speed and time. 
+        #  This would not be good practice on a real robot since battery voltage drops causing the turn rate to vary. 
+        #  These two parameters cause a good 90 degree turn to the right (0.5, 0.85) [Speed,Time]
+
         self.set_wheel_speeds_separately(percent_velocity, -percent_velocity)
         start_time = self.robot.getTime()
         time_in_loop = 0
@@ -146,7 +149,6 @@ class ThymioRobot(Robot):
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     def stop_and_pause_for_x_seconds(self, time_seconds):
         print(f"Stopping for {time_seconds:4.1f} seconds.  Current time {self.robot.getTime():5.1f}")
-        self.set_RGB_LED_2()
         self.set_both_wheel_speeds(0)
         start_time = self.robot.getTime()
         time_in_loop = 0
@@ -157,23 +159,28 @@ class ThymioRobot(Robot):
         self.set_both_wheel_speeds(0)
         print (f"Completed at: {current_time:5.1f}    {self.robot.getTime():5.1f}")
 
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    def calculate_color_value(self, percent_red, percent_green, percent_blue) -> int:
+        # Control the LEDs with Values betweem 0 - 32 for each color  
+        # where the color positions are (RR,GG,BB).  
+        # Calculate the color value, then move to correct bit position using the "* (0xFF0000)" calculation 
+        red   =  (32 * percent_red)   * (0xFF0000)  
+        green =  (32 * percent_green) * (0x00FF00)  
+        blue  =  (32 * percent_blue)  * (0x0000FF)  
+        return int(red + green + blue)
 
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    def set_color_of_top_LED(self, percent_red, percent_green, percent_blue):
-        
-        self.top_RGB_led.set(0xFF0000)
+    def set_color_of_top_LED(self, percent_red, percent_green, percent_blue) -> None:
+        self.top_RGB_led.set(self.calculate_color_value(percent_red, percent_green, percent_blue))
 
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    def set_RGB_LED_1(self):    # (0xFF0000)
-        self.top_RGB_led.set(0xFF0000)
-        self.bottom_left_RGB_led.set(0x0000FF)
-        self.bottom_right_RGB_led.set(0x000000)
+    def set_color_of_bottom_left_LED(self, percent_red, percent_green, percent_blue) -> None:
+        self.bottom_left_RGB_led.set(self.calculate_color_value(percent_red, percent_green, percent_blue))
 
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    def set_RGB_LED_2(self):    # (0xFF0000)
-        self.top_RGB_led.set(0x00FF00)
-        self.bottom_left_RGB_led.set(0x000000)
-        self.bottom_right_RGB_led.set(0x0000FF)
+    def set_color_of_bottom_right_LED(self, percent_red, percent_green, percent_blue) -> None:
+        self.bottom_right_RGB_led.set(self.calculate_color_value(percent_red, percent_green, percent_blue))
 
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     def print_current_time(self):
@@ -186,9 +193,19 @@ class ThymioRobot(Robot):
 
 robot_one = ThymioRobot()
 
+robot_one.stop_and_pause_for_x_seconds(3)
+
 while (robot_one.get_simulation_is_not_complete() ):    
     robot_one.print_current_time()
-    robot_one.stop_and_pause_for_x_seconds(5)
-    robot_one.turn_robot_speeds_time(0.5, 1.0)
+    robot_one.set_color_of_top_LED(1.0, 0, 0)
+    robot_one.stop_and_pause_for_x_seconds(0.5)
+    robot_one.turn_robot_speed_time(0.5, 1.7)    # Turn to the Right
+
+    robot_one.set_color_of_top_LED(0, 1.0, 0)
+    robot_one.stop_and_pause_for_x_seconds(0.5)
+    robot_one.turn_robot_speed_time(-0.5, 1.7)   # Turn to the left
+
+
+    # robot_one.turn_robot_speeds_time(0.5, 1.0)
 
 #===============================================================================================
