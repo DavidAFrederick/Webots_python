@@ -32,7 +32,6 @@ class ThymioRobot(Robot):
         self.leftMotor.setPosition(float('inf'))         # Set the "Stop Position" to infinity
         self.rightMotor.setPosition(float('inf'))
 
-
         # - - ( Instantate the Range Sensors ) - - - - - - - - - - - - - - - - - - - - - - - - 
 
         # Get frontal distance sensors.
@@ -50,14 +49,12 @@ class ThymioRobot(Robot):
         self.outerRightSensor.enable(self.timeStep)
 
         # - - ( Instantiate the LEDs ) - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-
         self.top_RGB_led = self.robot.getDevice('leds.top') # Access the  RGB LEDs
         self.bottom_left_RGB_led = self.robot.getDevice('leds.bottom.left') 
         self.bottom_right_RGB_led = self.robot.getDevice('leds.bottom.right') 
 
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     # - [Low Level Methods ]- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    
     def move_robot_time_forward(self) -> None:
         self.robot.step(self.timeStep)
 
@@ -72,7 +69,7 @@ class ThymioRobot(Robot):
     
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     def print_sensor_values(self) -> None:
-        self.outerLeftSensorValue    = self.outerLeftSensor.getValue()      # Touching is 2500
+        self.outerLeftSensorValue    = self.outerLeftSensor.getValue()      
         self.centralLeftSensorValue  = self.centralLeftSensor.getValue()  
         self.centralSensorValue      = self.centralSensor.getValue()      
         self.centralRightSensorValue = self.centralRightSensor.getValue() 
@@ -82,9 +79,6 @@ class ThymioRobot(Robot):
 
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     def set_both_wheel_speeds(self, percent_velocity : float) -> None:
-        # Set wheel velocities based on sensor values, prefer right turns if the central sensor is triggered.
-        # self.left_velocity = self.initialVelocity - (self.centralRightSensorValue + self.outerRightSensorValue) 
-        # self.right_velicity = self.initialVelocity - (self.centralLeftSensorValue + self.outerLeftSensorValue)  - self.centralSensorValue
         speed = percent_velocity * self.maxMotorVelocity
         self.leftMotor.setVelocity(speed)
         self.rightMotor.setVelocity(speed)
@@ -96,7 +90,32 @@ class ThymioRobot(Robot):
         self.leftMotor.setVelocity(left_speed)
         self.rightMotor.setVelocity(right_speed)
 
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    def calculate_color_value(self, percent_red, percent_green, percent_blue) -> int:
+        # Control the LEDs with Values betweem 0 - 32 for each color  
+        # where the color positions are (RR,GG,BB).  
+        # Calculate the color value, then move to correct bit position using the "* (0xFF0000)" calculation 
+        red   =  (32 * percent_red)   * (0xFF0000)  
+        green =  (32 * percent_green) * (0x00FF00)  
+        blue  =  (32 * percent_blue)  * (0x0000FF)  
+        return int(red + green + blue)
 
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    def set_color_of_top_RGB_LED(self, percent_red, percent_green, percent_blue) -> None:
+        self.top_RGB_led.set(self.calculate_color_value(percent_red, percent_green, percent_blue))
+
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    def set_color_of_bottom_left_RGB_LED(self, percent_red, percent_green, percent_blue) -> None:
+        self.bottom_left_RGB_led.set(self.calculate_color_value(percent_red, percent_green, percent_blue))
+
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    def set_color_of_bottom_right_RGB_LED(self, percent_red, percent_green, percent_blue) -> None:
+        self.bottom_right_RGB_led.set(self.calculate_color_value(percent_red, percent_green, percent_blue))
+
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    def print_current_time(self):
+        self.current_time = self.robot.getTime()
+        print (f"Current time: {self.current_time:6.2f}")
 
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     # - - [ High Level Methods ]- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -135,19 +154,8 @@ class ThymioRobot(Robot):
         self.set_both_wheel_speeds(0)
         print (f"Stopping movement at: {current_time:5.1f}")
 
-    # NOTE:  GETPOSITION Not support on this robot
-    # def move_using_position_sensor(self, distance_to_travel : float, speed_to_travel : float) -> None:
-    #     self.leftMotor.setPosition(float('inf'))         # Set the "Stop Position" to infinity
-    #     self.rightMotor.setPosition(float('inf'))   
-    #     self.set_both_wheel_speeds(speed_to_travel)
-    #     self.current_position = self.leftMotor.getPosition()
-    #     while (self.current_position < distance_to_travel):
-    #         self.move_robot_time_forward()
-    #         self.current_position = self.leftMotor.getPosition()
-    #         print(f"Current Position:  {self.leftMotor.getPosition()}      Target Position:  {distance_to_travel}")
-
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    def stop_and_pause_for_x_seconds(self, time_seconds):
+    def stop_and_pause_for_x_seconds(self, time_seconds) -> None:
         print(f"Stopping for {time_seconds:4.1f} seconds.  Current time {self.robot.getTime():5.1f}")
         self.set_both_wheel_speeds(0)
         start_time = self.robot.getTime()
@@ -159,35 +167,6 @@ class ThymioRobot(Robot):
         self.set_both_wheel_speeds(0)
         print (f"Completed at: {current_time:5.1f}    {self.robot.getTime():5.1f}")
 
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-    def calculate_color_value(self, percent_red, percent_green, percent_blue) -> int:
-        # Control the LEDs with Values betweem 0 - 32 for each color  
-        # where the color positions are (RR,GG,BB).  
-        # Calculate the color value, then move to correct bit position using the "* (0xFF0000)" calculation 
-        red   =  (32 * percent_red)   * (0xFF0000)  
-        green =  (32 * percent_green) * (0x00FF00)  
-        blue  =  (32 * percent_blue)  * (0x0000FF)  
-        return int(red + green + blue)
-
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    def set_color_of_top_LED(self, percent_red, percent_green, percent_blue) -> None:
-        self.top_RGB_led.set(self.calculate_color_value(percent_red, percent_green, percent_blue))
-
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    def set_color_of_bottom_left_LED(self, percent_red, percent_green, percent_blue) -> None:
-        self.bottom_left_RGB_led.set(self.calculate_color_value(percent_red, percent_green, percent_blue))
-
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    def set_color_of_bottom_right_LED(self, percent_red, percent_green, percent_blue) -> None:
-        self.bottom_right_RGB_led.set(self.calculate_color_value(percent_red, percent_green, percent_blue))
-
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    def print_current_time(self):
-        self.current_time = self.robot.getTime()
-        print (f"Current time: {self.current_time:6.2f}")
-
-    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 #===============================================================================================
 
@@ -195,17 +174,33 @@ robot_one = ThymioRobot()
 
 robot_one.stop_and_pause_for_x_seconds(3)
 
+
 while (robot_one.get_simulation_is_not_complete() ):    
     robot_one.print_current_time()
-    robot_one.set_color_of_top_LED(1.0, 0, 0)
-    robot_one.stop_and_pause_for_x_seconds(0.5)
-    robot_one.turn_robot_speed_time(0.5, 1.7)    # Turn to the Right
+    robot_one.set_color_of_top_RGB_LED(1.0, 0, 0)
+    for counter in range(62):
+        robot_one.set_both_wheel_speeds(0.8)           # Drive forward for a second
+        robot_one.move_robot_time_forward()
 
-    robot_one.set_color_of_top_LED(0, 1.0, 0)
-    robot_one.stop_and_pause_for_x_seconds(0.5)
-    robot_one.turn_robot_speed_time(-0.5, 1.7)   # Turn to the left
+    for counter in range(30):                          # Stop the robot for a second
+        robot_one.set_both_wheel_speeds(0) 
+        robot_one.move_robot_time_forward()
 
+    for counter in range(54):                          # Turn the robot for half a second
+        robot_one.set_wheel_speeds_separately(0.5, -0.5) 
+        robot_one.move_robot_time_forward()
 
-    # robot_one.turn_robot_speeds_time(0.5, 1.0)
+    for counter in range(30):                          # Stop the robot for a second
+        robot_one.set_both_wheel_speeds(0) 
+        robot_one.move_robot_time_forward()
+
+# Using High level methods    
+# while (robot_one.get_simulation_is_not_complete() ):    
+#     robot_one.print_current_time()
+#     robot_one.set_color_of_top_RGB_LED(1.0, 0, 0)
+#     robot_one.move_forward_at_percent_speed_x_for_y_seconds(0.8, 1.0)
+#     robot_one.stop_and_pause_for_x_seconds(0.5)
+#     robot_one.turn_robot_speed_time(0.5, 0.85)    # Positive values Turn to the Right
+
 
 #===============================================================================================
